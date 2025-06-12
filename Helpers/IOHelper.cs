@@ -2,27 +2,18 @@
 {
     public static class IOHelper
     {
-        public static FileInfo FindFile(string path, string fileName)
+        public static List<FileInfo> FindFiles(string path, string fileName)
         {
-
             var directoryInfo = new DirectoryInfo(path);
-            var result = directoryInfo.GetFiles().FirstOrDefault(
-                f => f.Name.ToLower() == fileName.ToLower());
+            var results = directoryInfo.GetFiles().Where(
+                f => f.Name.Trim().ToLower() == fileName.Trim().ToLower()).ToList();
 
-            if (result == null)
+            foreach (var subDirectory in directoryInfo.GetDirectories())
             {
-                foreach (var subDirectory in directoryInfo.GetDirectories())
-                {
-                    result = FindFile(subDirectory.FullName, fileName);
-
-                    if (result != null)
-                    {
-                        return result;
-                    }
-                }
+                results.AddRange(FindFiles(subDirectory.FullName, fileName));
             }
 
-            return result;
+            return results;
         }
     }
 }

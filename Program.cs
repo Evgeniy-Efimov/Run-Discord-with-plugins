@@ -15,15 +15,19 @@ try
     var exeFileName = settings.RunDiscordSettings.ExeFileName;
     var pluginFilesNames = settings.RunDiscordSettings.PluginFilesNames;
     var pluginFilesRootFolder = settings.RunDiscordSettings.PluginFilesRootFolder;
-    var exeFileInfo = IOHelper.FindFile(rootFolder, exeFileName);
+    var proxySettings = settings.ProxySettings;
+    var exeFilesInfo = IOHelper.FindFiles(rootFolder, exeFileName);
     
     //Find exe file
-    if (exeFileInfo == null)
+    if (exeFilesInfo == null || exeFilesInfo.Count < 1)
     {
         throw new Exception($"File '{exeFileName}' not found in '{rootFolder}'");
     }
 
-    logger.LogInformation($"Found exe file path: {exeFileInfo?.FullName}");
+    var exeFileInfo = exeFilesInfo
+        .ToDictionary(k => k.FullName, v => v)
+        .OrderByDescending(i => i.Key).First().Value;
+    logger.LogInformation($"Found latest exe file path: {exeFileInfo?.FullName}");
 
     //Copy plugin files
     foreach (var pluginFileName in pluginFilesNames)
@@ -47,20 +51,21 @@ try
         }
     }
 
+    logger.LogInformation($"Wait for proxy at {proxySettings.Host}:{proxySettings.Port}...");
+    ProxyHelper.WaitForProxyAsync(proxySettings).Wait();
+
+    logger.LogInformation("Done. Start application...");
     Process.Start(settings.ExplorerProcessName, exeFileInfo.FullName);
 
-    logger.LogInformation("Done. Closing console application...");
+    logger.LogInformation("Done. Closing console...");
 }
 catch (Exception ex)
 {
     if (logger != null)
     {
-        logger.LogError(ex, "General error");
+        logger.LogError(ex, "Error");
     }
-    else
-    {
-        Console.WriteLine($"Error: {ex?.Message}");
-    }
-
+    
+    Console.WriteLine($"Error: {ex?.Message}");
     Console.ReadLine();
 }
