@@ -51,7 +51,7 @@ try
         }
     }
 
-    logger.LogInformation($"Wait for proxy at {proxySettings.Host}:{proxySettings.Port}...");
+    logger.LogInformation($"Waiting for proxy at {proxySettings.Host}:{proxySettings.Port}...");
     ProxyHelper.WaitForProxyAsync(proxySettings).Wait();
 
     logger.LogInformation("Done. Start application...");
@@ -63,9 +63,12 @@ catch (Exception ex)
 {
     if (logger != null)
     {
-        logger.LogError(ex, "Error");
+        logger.LogError(ex, string.Empty);
     }
-    
-    Console.WriteLine($"Error: {ex?.Message}");
+    else
+    {
+        Console.WriteLine($"Error: {ex?.Message}");
+    }
+
     Console.ReadLine();
 }
